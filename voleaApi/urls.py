@@ -3,10 +3,9 @@ from rest_framework import routers
 from . import views
 
 router = routers.DefaultRouter()
-router.register(r'lists', views.ListViewSet)
+router.register(r'categories', views.CategoryViewSet)
 router.register(r'items', views.ItemViewSet)
 router.register(r'users', views.UserViewSet)
-
 
 urlpatterns = [
     path(r'auth/', include('dj_rest_auth.urls')),

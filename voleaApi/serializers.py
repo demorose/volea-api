@@ -1,34 +1,30 @@
 from rest_framework import serializers
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from django.contrib.auth.models import User
-from .models import List, Item, Profile
+from .models import Item, Profile, Category
 
-class ProfileSerializer(serializers.ModelSerializer):
+class SimpleProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ('pk', 'birthday', 'avatar')
 
-
-class UserSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer()
+class CategorySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = User
-        fields = ['username', 'last_name', 'first_name', 'email', 'profile']
-
-
-class ListSerializer(serializers.HyperlinkedModelSerializer):
-    items = serializers.HyperlinkedRelatedField(many=True, view_name='item-detail', read_only=True)
-    class Meta:
-        model = List
+        model = Category
         read_only_fields = ['id']
-        fields = ['id', 'name', 'owner', 'sharedWith', 'items']
-
+        fields = ['id', 'name', 'owner']
 
 class ItemSerializer(serializers.HyperlinkedModelSerializer):
+    owner = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
     class Meta:
         model = Item
         read_only_fields = ['id']
-        fields = ['id', 'name', 'list', 'owner', 'checker']
+        fields = ['id', 'name', 'owner', 'checker']
+    def get_validation_exclusions(self):
+        exclusions = super(ItemSerializer, self).get_validation_exclusions()
+        return exclusions + ['owner']
 
 class VoleaRegisterSerializer(RegisterSerializer):
     first_name = serializers.CharField(max_length=30)
@@ -43,11 +39,10 @@ class VoleaRegisterSerializer(RegisterSerializer):
         avatar = None
         if('avatar' in request.data):
             avatar = request.data['avatar']
-
         Profile.objects.create(user = user, birthday = request.data['birthday'], avatar = avatar)
 
 class VoleaUserDetailsSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer()
+    profile = SimpleProfileSerializer()
     
     class Meta:
         model = User

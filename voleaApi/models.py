@@ -10,41 +10,38 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     birthday = models.DateField()
     avatar = models.URLField(blank=True, null=True)
+    isPublic = models.BooleanField(default=False)
+    share_with = models.ManyToManyField(
+        'Profile',
+        blank=True
+    )
     history = HistoricalRecords()
     def __str__(self):
         return self.user.username
 
-        
-class List(models.Model):
+class Category(models.Model):
     name = models.CharField(max_length=255)
-    owner = models.ForeignKey(Profile, on_delete = models.CASCADE)
-    sharedWith = models.ManyToManyField(
-        Profile, 
-        'user_list',
-        'sharedWith',
-        blank=True
-    )
-    isPublic = models.BooleanField(
-        default=False
+    owner = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE,
+        related_name='categories'
     )
     history = HistoricalRecords()
-
     def __str__(self):
         return self.name
 
 
 class Item(models.Model):
     name = models.CharField(max_length=255)
-    list = models.ForeignKey(List, related_name='items', on_delete = models.CASCADE)
     owner = models.ForeignKey(
-        Profile, 
+        User, 
         on_delete=models.CASCADE,
-        related_name='owner'
+        related_name='items'
     )
     checker = models.ForeignKey(
-        Profile,
+        User,
         on_delete=models.SET_NULL,
-        related_name='checker', 
+        related_name='items_checked', 
         blank=True,
         null=True
     )
